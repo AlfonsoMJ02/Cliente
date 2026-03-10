@@ -410,7 +410,7 @@ $(document).ready(function () {
             $("#colonia").empty().append('<option value="">Selecciona...</option>');
 
             $.ajax({
-                url: '/Usuario/estado/getByPais/' + idPais,
+                url: 'http://localhost:8080/Api/Usuario/Estado/GetByPais/' + idPais,
                 type: 'GET',
                 success: function (result) {
 
@@ -447,7 +447,7 @@ $(document).ready(function () {
             $("#colonia").empty().append('<option value="">Selecciona...</option>');
 
             $.ajax({
-                url: '/Usuario/municipio/getByEstado/' + idEstado,
+                url: 'http://localhost:8080/Api/Usuario/Municipio/GetByEstado/' + idEstado,
                 type: 'GET',
                 success: function (result) {
 
@@ -481,7 +481,7 @@ $(document).ready(function () {
             $("#colonia").empty().append('<option value="">Selecciona...</option>');
 
             $.ajax({
-                url: '/Usuario/colonia/getByMunicipio/' + idMunicipio,
+                url: 'http://localhost:8080/Api/Usuario/Colonia/GetByMunicipio/' + idMunicipio,
                 type: 'GET',
                 success: function (result) {
 

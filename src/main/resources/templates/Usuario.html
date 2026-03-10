@@ -619,7 +619,7 @@
                                                     <span th:text="${direccion.colonia.nombre}"></span>,
                                                     <span th:text="${direccion.colonia.municipio.nombre}"></span>,
                                                     <span th:text="${direccion.colonia.municipio.estado.nombre}"></span>
-                                                    <span th:text="${direccion.colonia.municipio.estado.pais.nombre}">text</span>
+                                                    
                                                 </div>
 
                                                 
@@ -633,9 +633,8 @@
                                                      </a>
 
                                                     <a class="btn btn-sm btn-outline-danger"
-                                                       data-bs-toggle="modal"
-                                                       data-bs-target="#PreguntaEliminarDireccion"
-                                                       th:attr="data-id=${direccion.idDireccion}">
+                                                       th:attr="data-id=${direccion.idDireccion}"
+                                                       onclick="confirmarEliminacionDireccion(this)">
                                                         🗑
                                                     </a>
 
@@ -673,7 +672,7 @@
                 var button = event.relatedTarget;
                 var id = button.getAttribute('data-id');
 
-                fetch('/Usuario/getById?idUsuario=' + id)
+                fetch('http://localhost:8080/Api/Usuario/GetById/' + id)
                     .then(response => response.json())
                     .then(data => {
 
@@ -774,8 +773,8 @@
 
                 if (!result.isConfirmed) return;
 
-                fetch('/Usuario/Delete/' + id, {
-                    method: 'POST'
+                fetch('http://localhost:8080/Api/Usuario/Delete/' + id, {
+                    method: 'DELETE'
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -993,7 +992,7 @@
                         $("#municipio" + sufijo).empty().append('<option value="0">Selecciona...</option>');
                         $("#colonia" + sufijo).empty().append('<option value="0">Selecciona...</option>');
 
-                        $.get('/Usuario/estado/getByPais/' + idPais, function(result){
+                        $.get('http://localhost:8080/Api/Usuario/Estado/GetByPais/' + idPais, function(result){
                             if(result.correct){
                                 $.each(result.objects, function(i, estado){
                                     $("#estado" + sufijo).append(
@@ -1014,7 +1013,7 @@
                         $("#municipio" + sufijo).empty().append('<option value="0">Selecciona...</option>');
                         $("#colonia" + sufijo).empty().append('<option value="0">Selecciona...</option>');
 
-                        $.get('/Usuario/municipio/getByEstado/' + idEstado, function(result){
+                        $.get('http://localhost:8080/Api/Usuario/Municipio/GetByEstado/' + idEstado, function(result){
                             if(result.correct){
                                 $.each(result.objects, function(i, municipio){
                                     $("#municipio" + sufijo).append(
@@ -1034,7 +1033,7 @@
 
                         $("#colonia" + sufijo).empty().append('<option value="0">Selecciona...</option>');
 
-                        $.get('/Usuario/colonia/getByMunicipio/' + idMunicipio, function(result){
+                        $.get('http://localhost:8080/Api/Usuario/Colonia/GetByMunicipio/' + idMunicipio, function(result){
                             if(result.correct){
                                 $.each(result.objects, function(i, colonia){
                                     $("#colonia" + sufijo).append(
@@ -1169,17 +1168,66 @@
             });
 
                
-            //Eliminar direccion modal
-            var modalDireccion = document.getElementById('PreguntaEliminarDireccion');
+            //Eliminar direccion modal            
+            function confirmarEliminacionDireccion(button) {
 
-            modalDireccion.addEventListener('show.bs.modal', function (event) {
+            const id = button.getAttribute("data-id");
 
-                var button = event.relatedTarget;
-                var idDireccion = button.getAttribute('data-id');
+            Swal.fire({
+                title: '¿Eliminar direccion?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
 
-                var btnConfirmar = document.getElementById('btnEliminarDireccion');
-                btnConfirmar.href = '/Usuario/Direccion/Delete/' + idDireccion;
+                if (!result.isConfirmed) return;
+
+                fetch('http://localhost:8080/Api/Usuario/Delete/Direccion/' + id, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+
+                    if (data.correct) {
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Eliminado',
+                            text: 'La direccion fue eliminada correctamente',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+
+                        const fila = document.getElementById('fila-' + id);
+                        if (fila) {
+                            fila.remove();
+                        }
+
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.errorMessage
+                        });
+                    }
+
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error inesperado',
+                        text: 'Ocurrió un problema al eliminar'
+                    });
+                    console.error(error);
+                });
+
             });
+        }
         </script>
         <script th:if="${success}">
     Swal.fire({

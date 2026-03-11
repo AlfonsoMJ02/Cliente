@@ -369,7 +369,7 @@
 
                                     <div class="col-md-4">
                                         <label class="form-label">CP:</label>
-                                        <input class="form-control" id="codigoPostalAgregar" readonly>
+                                        <input class="form-control" id="codigoPostalAgregar">
                                     </div>
 
                                 </div>
@@ -393,58 +393,34 @@
                 </div>
             </div>
         </div>
-            
-            
-            <!-- Eliminar Direccion Modal -->
-            <div class="modal fade" id="PreguntaEliminarDireccion" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Confirmar eliminación de la dirección</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-
-                        <div class="modal-body">
-                            <p><strong>¿Estas seguro que quieres eliminar esta dirección?</strong></p>
-
-                            <a id="btnEliminarDireccion"
-                                class="btn btn-danger btn-sm">
-                                Eliminar
-                             </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
+           
             <h1 class="text-primary fw-bold text-center mb-4">Usuarios del sistema</h1>
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
 
                     <!-- Busqueda -->
-                    <form class="d-flex gap-2 align-items-center"
-                        th:action="@{/Usuario/Search}"
+                    <form id="formBusqueda" class="d-flex gap-2 align-items-center"
                         method="get">
 
-                      <input type="text"
+                      <input type="text" id="nombreSearch"
                              class="form-control form-control-sm"
                              placeholder="Nombre"
                              name="nombre"
                              style="width:150px;">
 
-                      <input type="text"
+                      <input type="text" id="apellidoPaternoSearch"
                              class="form-control form-control-sm"
                              placeholder="Apellido Paterno"
                              name="apellidoPaterno"
                              style="width:170px;">
 
-                      <input type="text"
+                      <input type="text" id="apellidoMaternoSearch"
                              class="form-control form-control-sm"
                              placeholder="Apellido Materno"
                              name="apellidoMaterno"
                              style="width:170px;">
 
-                      <select class="form-select form-select-sm"
+                      <select id="idRolSearch" class="form-select form-select-sm"
                               name="idRol"
                               style="width:170px;">
 
@@ -488,7 +464,7 @@
                     </thead>
                     
                     <!-- GetAll Usuarios -->
-                    <tbody>
+                    <tbody id="tablaUsuarios">
                         <tr th:each="usuario : ${usuarios}" th:id="'fila-' + ${usuario.idUsuario}">
                             <td colspan="2">
 
@@ -600,10 +576,11 @@
 
                                     
                                     <hr>
-
+                                    <div th:id="'contenedor-direcciones-' + ${usuario.idUsuario}">
                                     <div th:if="${usuario.direcciones != null and !usuario.direcciones.isEmpty()}">
                                         <div th:each="direccion : ${usuario.direcciones}"
-                                             class="border rounded p-2 mb-2 small bg-light">
+                                            th:id="'direccion-' + ${direccion.idDireccion}"
+                                            class="border rounded p-2 mb-2 small bg-light">
 
                                             <div class="row align-items-center">
 
@@ -619,7 +596,7 @@
                                                     <span th:text="${direccion.colonia.nombre}"></span>,
                                                     <span th:text="${direccion.colonia.municipio.nombre}"></span>,
                                                     <span th:text="${direccion.colonia.municipio.estado.nombre}"></span>
-                                                    
+                                                    <span th:text="${direccion.colonia.municipio.estado.pais.nombre}"></span>
                                                 </div>
 
                                                 
@@ -633,8 +610,8 @@
                                                      </a>
 
                                                     <a class="btn btn-sm btn-outline-danger"
-                                                       th:attr="data-id=${direccion.idDireccion}"
-                                                       onclick="confirmarEliminacionDireccion(this)">
+                                                        th:attr="data-id=${direccion.idDireccion}, data-usuario=${usuario.idUsuario}"
+                                                        onclick="confirmarEliminacionDireccion(this)">
                                                         🗑
                                                     </a>
 
@@ -651,7 +628,7 @@
                                     </div>
 
                                 </div>
-
+                               </div>
                             </td>
                         </tr>
                     </tbody>
@@ -716,44 +693,68 @@
 
             //Actualiza la informacion del usuario
             document.querySelector("#EditarUsuario form")
-            .addEventListener("submit", function(e) {
+.addEventListener("submit", function(e) {
 
-                e.preventDefault();
+    e.preventDefault();
 
-                let usuario = {
-                    IdUsuario: document.getElementById("idUsuario").value,
-                    Nombre: document.getElementById("nombre").value,
-                    ApellidoPaterno: document.getElementById("apellidoPaterno").value,
-                    ApellidoMaterno: document.getElementById("apellidoMaterno").value,
-                    Email: document.getElementById("email").value,
-                    FechaNacimiento: document.getElementById("fechaNacimiento").value,
-                    Password: document.getElementById("password").value,
-                    Sexo: document.querySelector("input[name='sexo']:checked")?.value,
-                    Telefono: document.getElementById("telefono").value,
-                    Celular: document.getElementById("celular").value,
-                    Curp: document.getElementById("curp").value,
-                    UserName: document.getElementById("usuario").value,
-                    Rol: {
-                        IdRol: document.getElementById("rol").value
-                    }
-                };
+    let usuario = {
+        IdUsuario: document.getElementById("idUsuario").value,
+        Nombre: document.getElementById("nombre").value,
+        ApellidoPaterno: document.getElementById("apellidoPaterno").value,
+        ApellidoMaterno: document.getElementById("apellidoMaterno").value,
+        Email: document.getElementById("email").value,
+        FechaNacimiento: document.getElementById("fechaNacimiento").value,
+        Password: document.getElementById("password").value,
+        Sexo: document.querySelector("input[name='sexo']:checked")?.value,
+        Telefono: document.getElementById("telefono").value,
+        Celular: document.getElementById("celular").value,
+        Curp: document.getElementById("curp").value,
+        UserName: document.getElementById("usuario").value,
+        Rol: {
+            IdRol: document.getElementById("rol").value
+        }
+    };
 
-                fetch("/Usuario/Update", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(usuario)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.correct) {
-                        location.reload();
-                    } else {
-                        alert("Error: " + data.errorMessage);
-                    }
-                });
+    fetch("http://localhost:8080/Api/Usuario/Update", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(usuario)
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        if (data.correct) {
+
+    const modalElement = document.getElementById('EditarUsuario');
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    modal.hide();
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Actualizado',
+        text: 'Usuario actualizado correctamente',
+        timer: 1500,
+        showConfirmButton: false
+    }).then(() => {
+        location.reload();
+    });
+
+} else {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.errorMessage
             });
+
+        }
+
+    })
+    .catch(error => console.error(error));
+
+});
 
             //Eliminar usuario
             function confirmarEliminacion(button) {
@@ -825,7 +826,7 @@
                 var button = event.relatedTarget;
                 var idDireccion = button.getAttribute('data-id');
 
-                fetch('/Usuario/Direccion/GetById/' + idDireccion)
+                fetch('http://localhost:8080/Api/Usuario/GetById/Direccion/' + idDireccion)
                     .then(response => response.json())
                     .then(data => {
 
@@ -851,7 +852,7 @@
                             $("#pais").val(idPais);
 
                             // Cargar estados
-                            $.get('/Usuario/estado/getByPais/' + idPais, function (result) {
+                            $.get('http://localhost:8080/Api/Usuario/Estado/GetByPais/' + idPais, function (result) {
 
                                 if (result.correct) {
 
@@ -866,7 +867,7 @@
                                     $("#estado").val(idEstado);
 
                                     // Cargar municipios
-                                    $.get('/Usuario/municipio/getByEstado/' + idEstado, function (result2) {
+                                    $.get('http://localhost:8080/Api/Usuario/Municipio/GetByEstado/' + idEstado, function (result2) {
 
                                         if (result2.correct) {
 
@@ -881,7 +882,7 @@
                                             $("#municipio").val(idMunicipio);
 
                                             // Cargar colonias
-                                            $.get('/Usuario/colonia/getByMunicipio/' + idMunicipio, function (result3) {
+                                            $.get('http://localhost:8080/Api/Usuario/Colonia/GetByMunicipio/' + idMunicipio, function (result3) {
 
                                                 if (result3.correct) {
 
@@ -932,124 +933,161 @@
             
             
             //Agrar nueva direccion
-            $("#formAgregarDireccion").submit(function (e) {
+$("#formAgregarDireccion").submit(function (e) {
 
-                e.preventDefault(); 
+    e.preventDefault(); 
 
-                var direccion = {
-                    Calle: $("#calleAgregar").val(),
-                    NumeroInterior: $("#numeroInteriorAgregar").val(),
-                    NumeroExterior: $("#numeroExteriorAgregar").val(),
-                    Usuario: {
-                        IdUsuario: $("#idUsuarioAgregar").val()
-                    },
-                    Colonia: {
-                        IdColonia: $("#coloniaAgregar").val()
-                    }
-                };
+    var direccion = {
+        Calle: $("#calleAgregar").val(),
+        NumeroInterior: $("#numeroInteriorAgregar").val(),
+        NumeroExterior: $("#numeroExteriorAgregar").val(),
+        Usuario: {
+            IdUsuario: $("#idUsuarioAgregar").val()
+        },
+        Colonia: {
+            IdColonia: $("#coloniaAgregar").val()
+        }
+    };
 
-                fetch('/Usuario/Direccion/Add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(direccion)
-                })
-                .then(response => response.json())
-                .then(data => {
+    fetch('http://localhost:8080/Api/Usuario/Add/Direccion', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(direccion)
+    })
+    .then(response => response.json())
+    .then(data => {
 
-                    if (data.correct) {
+        if (data.correct) {
 
-                        alert("Dirección agregada correctamente");
+            alert("Dirección agregada correctamente");
 
-                        // cerrar modal
-                        var modal = bootstrap.Modal.getInstance(document.getElementById('AgregarDireccion'));
-                        modal.hide();
+            var modal = bootstrap.Modal.getInstance(document.getElementById('AgregarDireccion'));
+            modal.hide();
 
-                        // opcional: recargar página
-                        location.reload();
+            location.reload();
 
-                    } else {
-                        alert("Error al guardar la dirección");
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                });
+        } else {
+            alert("Error al guardar la dirección");
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
+
+});
+
+
+
+function configurarCascada(sufijo){
+
+    console.log("Configurando cascada para:", sufijo);
+
+    $("#pais" + sufijo).change(function(){
+
+        console.log("Pais cambiado");
+
+        var idPais = $("#pais" + sufijo).val();
+
+        console.log("IdPais:", idPais);
+
+        if(idPais && idPais !== "0"){
+
+            $("#estado" + sufijo).empty().append('<option value="0">Selecciona...</option>');
+            $("#municipio" + sufijo).empty().append('<option value="0">Selecciona...</option>');
+            $("#colonia" + sufijo).empty().append('<option value="0">Selecciona...</option>');
+
+            $.get('http://localhost:8080/Api/Usuario/Estado/GetByPais/' + idPais, function(result){
+
+                console.log("Estados recibidos:", result);
+
+                if(result.correct){
+
+                    $.each(result.objects, function(i, estado){
+
+                        console.log("Estado:", estado);
+
+                        $("#estado" + sufijo).append(
+                            `<option value="${estado.IdEstado}">${estado.Nombre}</option>`
+                        );
+                    });
+                }
 
             });
+        }
+    });
+
+
+    $("#estado" + sufijo).change(function(){
+
+        console.log("Estado cambiado");
+
+        var idEstado = $("#estado" + sufijo).val();
+
+        if(idEstado && idEstado !== "0"){
+
+            $("#municipio" + sufijo).empty().append('<option value="0">Selecciona...</option>');
+            $("#colonia" + sufijo).empty().append('<option value="0">Selecciona...</option>');
+
+            $.get('http://localhost:8080/Api/Usuario/Municipio/GetByEstado/' + idEstado, function(result){
+
+                console.log("Municipios:", result);
+
+                if(result.correct){
+
+                    $.each(result.objects, function(i, municipio){
+
+                        $("#municipio" + sufijo).append(
+                            `<option value="${municipio.IdMunicipio}">${municipio.Nombre}</option>`
+                        );
+                    });
+                }
+
+            });
+        }
+    });
+
+
+    $("#municipio" + sufijo).change(function(){
+
+        console.log("Municipio cambiado");
+
+        var idMunicipio = $("#municipio" + sufijo).val();
+
+        if(idMunicipio && idMunicipio !== "0"){
+
+            $("#colonia" + sufijo).empty().append('<option value="0">Selecciona...</option>');
+
+            $.get('http://localhost:8080/Api/Usuario/Colonia/GetByMunicipio/' + idMunicipio, function(result){
+
+                console.log("Colonias:", result);
+
+                if(result.correct){
+
+                    $.each(result.objects, function(i, colonia){
+
+                        $("#colonia" + sufijo).append(
+                            `<option value="${colonia.IdColonia}">${colonia.Nombre}</option>`
+                        );
+                    });
+                }
+
+            });
+        }
+    });
+}
+
+
+$(document).ready(function () {
+
+    console.log("Inicializando cascada Agregar");
+
+    configurarCascada("Agregar");
+
+});
             
-            //
-            function configurarCascada(sufijo){
 
-                $("#pais" + sufijo).change(function(){
-
-                    var idPais = $("#pais" + sufijo).val();
-
-                    if(idPais && idPais !== "0"){
-
-                        $("#estado" + sufijo).empty().append('<option value="0">Selecciona...</option>');
-                        $("#municipio" + sufijo).empty().append('<option value="0">Selecciona...</option>');
-                        $("#colonia" + sufijo).empty().append('<option value="0">Selecciona...</option>');
-
-                        $.get('http://localhost:8080/Api/Usuario/Estado/GetByPais/' + idPais, function(result){
-                            if(result.correct){
-                                $.each(result.objects, function(i, estado){
-                                    $("#estado" + sufijo).append(
-                                        `<option value="${estado.IdEstado}">${estado.Nombre}</option>`
-                                    );
-                                });
-                            }
-                        });
-                    }
-                });
-
-                $("#estado" + sufijo).change(function(){
-
-                    var idEstado = $("#estado" + sufijo).val();
-
-                    if(idEstado && idEstado !== "0"){
-
-                        $("#municipio" + sufijo).empty().append('<option value="0">Selecciona...</option>');
-                        $("#colonia" + sufijo).empty().append('<option value="0">Selecciona...</option>');
-
-                        $.get('http://localhost:8080/Api/Usuario/Municipio/GetByEstado/' + idEstado, function(result){
-                            if(result.correct){
-                                $.each(result.objects, function(i, municipio){
-                                    $("#municipio" + sufijo).append(
-                                        `<option value="${municipio.IdMunicipio}">${municipio.Nombre}</option>`
-                                    );
-                                });
-                            }
-                        });
-                    }
-                });
-
-                $("#municipio" + sufijo).change(function(){
-
-                    var idMunicipio = $("#municipio" + sufijo).val();
-
-                    if(idMunicipio && idMunicipio !== "0"){
-
-                        $("#colonia" + sufijo).empty().append('<option value="0">Selecciona...</option>');
-
-                        $.get('http://localhost:8080/Api/Usuario/Colonia/GetByMunicipio/' + idMunicipio, function(result){
-                            if(result.correct){
-                                $.each(result.objects, function(i, colonia){
-                                    $("#colonia" + sufijo).append(
-                                        `<option value="${colonia.IdColonia}">${colonia.Nombre}</option>`
-                                    );
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-            
-            
-            
-            
-            
             function actualizarImagen(idUsuario, input) {
 
             const file = input.files[0];
@@ -1082,8 +1120,8 @@
                     formData.append("idUsuario", idUsuario);
                     formData.append("imagenFile", file);
 
-                    fetch('/Usuario/Imagen/Update', {
-                        method: 'POST',
+                    fetch('http://localhost:8080/Api/Usuario/Update/Imagen', {
+                        method: 'PUT',
                         body: formData
                     })
                     .then(response => response.json())
@@ -1171,63 +1209,74 @@
             //Eliminar direccion modal            
             function confirmarEliminacionDireccion(button) {
 
-            const id = button.getAttribute("data-id");
+    const id = button.getAttribute("data-id");
 
-            Swal.fire({
-                title: '¿Eliminar direccion?',
-                text: "Esta acción no se puede deshacer",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
+    Swal.fire({
+        title: '¿Eliminar direccion?',
+        text: "Esta acción no se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
 
-                if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return;
 
-                fetch('http://localhost:8080/Api/Usuario/Delete/Direccion/' + id, {
-                    method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(data => {
+        fetch('http://localhost:8080/Api/Usuario/Delete/Direccion/' + id, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
 
-                    if (data.correct) {
+            if (data.correct) {
 
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Eliminado',
-                            text: 'La direccion fue eliminada correctamente',
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-
-
-                        const fila = document.getElementById('fila-' + id);
-                        if (fila) {
-                            fila.remove();
-                        }
-
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.errorMessage
-                        });
-                    }
-
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error inesperado',
-                        text: 'Ocurrió un problema al eliminar'
-                    });
-                    console.error(error);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Eliminado',
+                    text: 'La direccion fue eliminada correctamente',
+                    timer: 1500,
+                    showConfirmButton: false
                 });
 
+                const direccion = document.getElementById('direccion-' + id);
+
+                if (direccion) {
+
+                    const contenedor = direccion.parentElement;
+                    direccion.remove();
+
+                    if (contenedor.querySelectorAll("[id^='direccion-']").length === 0) {
+
+                        const mensaje = document.createElement("div");
+                        mensaje.className = "text-muted small sin-direcciones";
+                        mensaje.innerText = "Sin direcciones registradas";
+
+                        contenedor.appendChild(mensaje);
+                    }
+                }
+
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.errorMessage
+                });
+            }
+
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error inesperado',
+                text: 'Ocurrió un problema al eliminar'
             });
-        }
+            console.error(error);
+        });
+
+    });
+}
         </script>
         <script th:if="${success}">
     Swal.fire({
@@ -1272,7 +1321,65 @@
 
     /*]]>*/
 </script>
+<script>
+document.getElementById("formBusqueda").addEventListener("submit", function(e){
 
+    e.preventDefault();
+
+    const nombre = document.getElementById("nombreSearch").value;
+    const apellidoPaterno = document.getElementById("apellidoPaternoSearch").value;
+    const apellidoMaterno = document.getElementById("apellidoMaternoSearch").value;
+    const idRol = document.getElementById("idRolSearch").value;
+
+    const params = new URLSearchParams({
+        nombre: nombre,
+        apellidoPaterno: apellidoPaterno,
+        apellidoMaterno: apellidoMaterno,
+        idRol: idRol
+    });
+
+    fetch("http://localhost:8080/Api/Usuario/Search?" + params)
+    .then(response => response.text())
+.then(data => {
+    console.log(data);
+})
+
+        if(data.correct){
+
+            const tabla = document.getElementById("tablaUsuarios");
+            tabla.innerHTML = "";
+
+            data.objects.forEach(usuario => {
+
+                let direccionTexto = "Sin dirección";
+
+                if(usuario.direcciones && usuario.direcciones.length > 0){
+
+                    const d = usuario.direcciones[0];
+
+                    direccionTexto =
+                        d.calle + " " +
+                        (d.numeroInterior ?? "") + " " +
+                        (d.numeroExterior ?? "");
+                }
+
+                tabla.innerHTML += `
+                    <tr>
+                        <td>${usuario.idUsuario}</td>
+                        <td>${usuario.nombre}</td>
+                        <td>${usuario.apellidoPaterno}</td>
+                        <td>${usuario.apellidoMaterno}</td>
+                        <td>${usuario.rol.nombre}</td>
+                        <td>${direccionTexto}</td>
+                    </tr>
+                `;
+            });
+
+        }
+
+    })
+});
+</script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -1283,8 +1390,8 @@ document.addEventListener("DOMContentLoaded", function () {
             var idUsuario = this.getAttribute("data-id");
             var estatus = this.checked ? 1 : 0;
             
-            fetch("/Usuario/Estatus/Update", {
-                method: "POST",
+            fetch("http://localhost:8080/Api/Usuario/Update/Estatus", {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
@@ -1315,6 +1422,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 });
+
+
 </script>
     </body>
 </html>

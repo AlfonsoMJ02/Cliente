@@ -18,15 +18,7 @@ public class Usuario {
     private String UserName;
     private LocalDate FechaNacimiento;
     public String Imagen;
-    private int Estatus;
-
-    public int getEstatus() {
-        return Estatus;
-    }
-
-    public void setEstatus(int Estatus) {
-        this.Estatus = Estatus;
-    }
+    private int Estatus = 1;
  
     private Rol Rol;
    
@@ -42,6 +34,13 @@ public class Usuario {
     
     private List<Direccion> Direcciones;
     
+    public int getEstatus() {
+        return Estatus;
+    }
+
+    public void setEstatus(int Estatus) {
+        this.Estatus = Estatus;
+    }
     public Colonia getColonia() {
         return colonia;
     }

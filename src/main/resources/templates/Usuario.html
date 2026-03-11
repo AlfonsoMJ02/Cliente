@@ -465,7 +465,12 @@
                     
                     <!-- GetAll Usuarios -->
                     <tbody id="tablaUsuarios">
-                        <tr th:each="usuario : ${usuarios}" th:id="'fila-' + ${usuario.idUsuario}">
+                        <tr th:each="usuario : ${usuarios}" 
+    th:id="'fila-' + ${usuario.idUsuario}"
+    th:data-nombre="${usuario.nombre}"
+    th:data-apellido-paterno="${usuario.apellidoPaterno}"
+    th:data-apellido-materno="${usuario.apellidoMaterno}"
+    th:data-rol="${usuario.rol.idRol}">
                             <td colspan="2">
 
                                 <div class="card shadow-sm mb-3 p-3">
@@ -937,17 +942,19 @@ $("#formAgregarDireccion").submit(function (e) {
 
     e.preventDefault(); 
 
-    var direccion = {
-        Calle: $("#calleAgregar").val(),
-        NumeroInterior: $("#numeroInteriorAgregar").val(),
-        NumeroExterior: $("#numeroExteriorAgregar").val(),
-        Usuario: {
-            IdUsuario: $("#idUsuarioAgregar").val()
-        },
-        Colonia: {
-            IdColonia: $("#coloniaAgregar").val()
-        }
-    };
+ var direccion = {
+    Calle: $("#calleAgregar").val(),
+    NumeroInterior: $("#numeroInteriorAgregar").val(),
+    NumeroExterior: $("#numeroExteriorAgregar").val(),
+    Usuario: {
+        IdUsuario: parseInt($("#idUsuarioAgregar").val())
+    },
+    Colonia: {
+        IdColonia: parseInt($("#coloniaAgregar").val())
+    }
+};
+
+console.log("Direccion enviada:", direccion);
 
     fetch('http://localhost:8080/Api/Usuario/Add/Direccion', {
         method: 'POST',
@@ -1173,37 +1180,65 @@ $(document).ready(function () {
             
             //Update Direccion
             document.querySelector('#EditarDireccion form')
-                .addEventListener("submit", function(e){
+.addEventListener("submit", function(e){
 
-            e.preventDefault();
+    e.preventDefault();
 
-            let direccion = {
-                IdDireccion: document.getElementById("idDireccion").value,
-                Calle: document.getElementById("calle").value,
-                NumeroInterior: document.getElementById("numeroInterior").value,
-                NumeroExterior: document.getElementById("numeroExterior").value,
-                Colonia: {
-                    IdColonia: document.getElementById("colonia").value
-                }
-            };
+    let direccion = {
+        IdDireccion: document.getElementById("idDireccion").value,
+        Calle: document.getElementById("calle").value,
+        NumeroInterior: document.getElementById("numeroInterior").value,
+        NumeroExterior: document.getElementById("numeroExterior").value,
+        Colonia: {
+            IdColonia: document.getElementById("colonia").value
+        }
+    };
 
-                fetch("/Usuario/Update/Direccion", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(direccion)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.correct) {
-                        location.reload();
-                    } else {
-                        alert("Error: " + data.errorMessage);
-                    }
-                });
+    fetch("http://localhost:8080/Api/Usuario/Update/Direccion", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(direccion)
+    })
+    .then(response => response.json())
+    .then(data => {
 
+        if (data.correct) {
+
+            // cerrar modal
+            const modalElement = document.getElementById('EditarDireccion');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            modal.hide();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Actualizado',
+                text: 'Dirección actualizada correctamente',
+                timer: 1500,
+                showConfirmButton: false
             });
+
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+
+        } else {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.errorMessage
+            });
+
+        }
+
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
+
+});
 
                
             //Eliminar direccion modal            
@@ -1326,58 +1361,31 @@ document.getElementById("formBusqueda").addEventListener("submit", function(e){
 
     e.preventDefault();
 
-    const nombre = document.getElementById("nombreSearch").value;
-    const apellidoPaterno = document.getElementById("apellidoPaternoSearch").value;
-    const apellidoMaterno = document.getElementById("apellidoMaternoSearch").value;
+    const nombre = document.getElementById("nombreSearch").value.toLowerCase();
+    const apellidoPaterno = document.getElementById("apellidoPaternoSearch").value.toLowerCase();
+    const apellidoMaterno = document.getElementById("apellidoMaternoSearch").value.toLowerCase();
     const idRol = document.getElementById("idRolSearch").value;
 
-    const params = new URLSearchParams({
-        nombre: nombre,
-        apellidoPaterno: apellidoPaterno,
-        apellidoMaterno: apellidoMaterno,
-        idRol: idRol
+    const filas = document.querySelectorAll("#tablaUsuarios tr");
+
+    filas.forEach(fila => {
+
+        const nombreFila = fila.dataset.nombre?.toLowerCase() || "";
+        const apellidoPaternoFila = fila.dataset.apellidoPaterno?.toLowerCase() || "";
+        const apellidoMaternoFila = fila.dataset.apellidoMaterno?.toLowerCase() || "";
+        const rolFila = fila.dataset.rol || "";
+
+        let mostrar = true;
+
+        if(nombre && !nombreFila.includes(nombre)) mostrar = false;
+        if(apellidoPaterno && !apellidoPaternoFila.includes(apellidoPaterno)) mostrar = false;
+        if(apellidoMaterno && !apellidoMaternoFila.includes(apellidoMaterno)) mostrar = false;
+        if(idRol && idRol !== "0" && rolFila !== idRol) mostrar = false;
+
+        fila.style.display = mostrar ? "" : "none";
+
     });
 
-    fetch("http://localhost:8080/Api/Usuario/Search?" + params)
-    .then(response => response.text())
-.then(data => {
-    console.log(data);
-})
-
-        if(data.correct){
-
-            const tabla = document.getElementById("tablaUsuarios");
-            tabla.innerHTML = "";
-
-            data.objects.forEach(usuario => {
-
-                let direccionTexto = "Sin dirección";
-
-                if(usuario.direcciones && usuario.direcciones.length > 0){
-
-                    const d = usuario.direcciones[0];
-
-                    direccionTexto =
-                        d.calle + " " +
-                        (d.numeroInterior ?? "") + " " +
-                        (d.numeroExterior ?? "");
-                }
-
-                tabla.innerHTML += `
-                    <tr>
-                        <td>${usuario.idUsuario}</td>
-                        <td>${usuario.nombre}</td>
-                        <td>${usuario.apellidoPaterno}</td>
-                        <td>${usuario.apellidoMaterno}</td>
-                        <td>${usuario.rol.nombre}</td>
-                        <td>${direccionTexto}</td>
-                    </tr>
-                `;
-            });
-
-        }
-
-    })
 });
 </script>
 <script>

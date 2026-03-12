@@ -23,7 +23,7 @@
             </div>
 
             <div id="formularioArchivo" class="mt-3">
-                <form id="formCarga" action="/Usuario/CargaMasiva" method="post" enctype="multipart/form-data">
+                <form id="formCarga" action="CargaMasiva" method="post" enctype="multipart/form-data">
 
                     <input type="file" id="fileInput" name="archivo"
                            class="form-control form-control-md mx-auto d-none"
@@ -42,7 +42,7 @@
             <div id="resultadoValidacion">
 
                 <div th:if="${archivoValido}" class="mt-4">
-                    <form th:action="@{/Usuario/ProcesarCargaMasiva/{uuid}(uuid=${uuidCarga})}" method="post">
+                    <form th:action="@{/Usuario/ProcesarCargaMasiva/{key}(key=${keycarga})}" method="post">
                         <button type="submit" class="btn btn-success">
                             Proceder con inserción
                         </button>

@@ -937,53 +937,65 @@
             });
             
             
+            
             //Agrar nueva direccion
-$("#formAgregarDireccion").submit(function (e) {
+            $("#formAgregarDireccion").submit(function (e) {
 
-    e.preventDefault(); 
+                e.preventDefault(); 
 
- var direccion = {
-    Calle: $("#calleAgregar").val(),
-    NumeroInterior: $("#numeroInteriorAgregar").val(),
-    NumeroExterior: $("#numeroExteriorAgregar").val(),
-    Usuario: {
-        IdUsuario: parseInt($("#idUsuarioAgregar").val())
-    },
-    Colonia: {
-        IdColonia: parseInt($("#coloniaAgregar").val())
-    }
-};
+             var direccion = {
+                Calle: $("#calleAgregar").val(),
+                NumeroInterior: $("#numeroInteriorAgregar").val(),
+                NumeroExterior: $("#numeroExteriorAgregar").val(),
+                Usuario: {
+                    IdUsuario: parseInt($("#idUsuarioAgregar").val())
+                },
+                Colonia: {
+                    IdColonia: parseInt($("#coloniaAgregar").val())
+                }
+            };
 
-console.log("Direccion enviada:", direccion);
+            console.log("Direccion enviada:", direccion);
 
-    fetch('http://localhost:8080/Api/Usuario/Add/Direccion', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(direccion)
-    })
-    .then(response => response.json())
-    .then(data => {
+                fetch('http://localhost:8080/Api/Usuario/Add/Direccion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(direccion)
+                })
+                .then(response => response.json())
+                .then(data => {
 
-        if (data.correct) {
+                    if (data.correct) {
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('AgregarDireccion'));
+                        modal.hide();
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Actualizado',
+                            text: 'Dirección actualizada correctamente',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
 
-            alert("Dirección agregada correctamente");
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
 
-            var modal = bootstrap.Modal.getInstance(document.getElementById('AgregarDireccion'));
-            modal.hide();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.errorMessage
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
 
-            location.reload();
-
-        } else {
-            alert("Error al guardar la dirección");
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-    });
-
-});
+            });
 
 
 
@@ -1180,138 +1192,138 @@ $(document).ready(function () {
             
             //Update Direccion
             document.querySelector('#EditarDireccion form')
-.addEventListener("submit", function(e){
+            .addEventListener("submit", function(e){
 
-    e.preventDefault();
+                e.preventDefault();
 
-    let direccion = {
-        IdDireccion: document.getElementById("idDireccion").value,
-        Calle: document.getElementById("calle").value,
-        NumeroInterior: document.getElementById("numeroInterior").value,
-        NumeroExterior: document.getElementById("numeroExterior").value,
-        Colonia: {
-            IdColonia: document.getElementById("colonia").value
-        }
-    };
+                let direccion = {
+                    IdDireccion: document.getElementById("idDireccion").value,
+                    Calle: document.getElementById("calle").value,
+                    NumeroInterior: document.getElementById("numeroInterior").value,
+                    NumeroExterior: document.getElementById("numeroExterior").value,
+                    Colonia: {
+                        IdColonia: document.getElementById("colonia").value
+                    }
+                };
 
-    fetch("http://localhost:8080/Api/Usuario/Update/Direccion", {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(direccion)
-    })
-    .then(response => response.json())
-    .then(data => {
+                fetch("http://localhost:8080/Api/Usuario/Update/Direccion", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(direccion)
+                })
+                .then(response => response.json())
+                .then(data => {
 
-        if (data.correct) {
+                    if (data.correct) {
 
-            // cerrar modal
-            const modalElement = document.getElementById('EditarDireccion');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            modal.hide();
+                        // cerrar modal
+                        const modalElement = document.getElementById('EditarDireccion');
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        modal.hide();
 
-            Swal.fire({
-                icon: 'success',
-                title: 'Actualizado',
-                text: 'Dirección actualizada correctamente',
-                timer: 1500,
-                showConfirmButton: false
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Actualizado',
+                            text: 'Dirección actualizada correctamente',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+
+                    } else {
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.errorMessage
+                        });
+
+                    }
+
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+
             });
-
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
-
-        } else {
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.errorMessage
-            });
-
-        }
-
-    })
-    .catch(error => {
-        console.error("Error:", error);
-    });
-
-});
 
                
             //Eliminar direccion modal            
             function confirmarEliminacionDireccion(button) {
 
-    const id = button.getAttribute("data-id");
+            const id = button.getAttribute("data-id");
 
-    Swal.fire({
-        title: '¿Eliminar direccion?',
-        text: "Esta acción no se puede deshacer",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-
-        if (!result.isConfirmed) return;
-
-        fetch('http://localhost:8080/Api/Usuario/Delete/Direccion/' + id, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-
-            if (data.correct) {
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Eliminado',
-                    text: 'La direccion fue eliminada correctamente',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-
-                const direccion = document.getElementById('direccion-' + id);
-
-                if (direccion) {
-
-                    const contenedor = direccion.parentElement;
-                    direccion.remove();
-
-                    if (contenedor.querySelectorAll("[id^='direccion-']").length === 0) {
-
-                        const mensaje = document.createElement("div");
-                        mensaje.className = "text-muted small sin-direcciones";
-                        mensaje.innerText = "Sin direcciones registradas";
-
-                        contenedor.appendChild(mensaje);
-                    }
-                }
-
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.errorMessage
-                });
-            }
-
-        })
-        .catch(error => {
             Swal.fire({
-                icon: 'error',
-                title: 'Error inesperado',
-                text: 'Ocurrió un problema al eliminar'
-            });
-            console.error(error);
-        });
+                title: '¿Eliminar direccion?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
 
-    });
-}
+                if (!result.isConfirmed) return;
+
+                fetch('http://localhost:8080/Api/Usuario/Delete/Direccion/' + id, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+
+                    if (data.correct) {
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Eliminado',
+                            text: 'La direccion fue eliminada correctamente',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        const direccion = document.getElementById('direccion-' + id);
+
+                        if (direccion) {
+
+                            const contenedor = direccion.parentElement;
+                            direccion.remove();
+
+                            if (contenedor.querySelectorAll("[id^='direccion-']").length === 0) {
+
+                                const mensaje = document.createElement("div");
+                                mensaje.className = "text-muted small sin-direcciones";
+                                mensaje.innerText = "Sin direcciones registradas";
+
+                                contenedor.appendChild(mensaje);
+                            }
+                        }
+
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.errorMessage
+                        });
+                    }
+
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error inesperado',
+                        text: 'Ocurrió un problema al eliminar'
+                    });
+                    console.error(error);
+                });
+
+            });
+        }
         </script>
         <script th:if="${success}">
     Swal.fire({
@@ -1389,49 +1401,48 @@ document.getElementById("formBusqueda").addEventListener("submit", function(e){
 });
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    //Actualizacion de estatus
+    document.addEventListener("DOMContentLoaded", function () {
 
-    document.querySelectorAll(".estatus-switch").forEach(function (switchElement) {
+        document.querySelectorAll(".estatus-switch").forEach(function (switchElement) {
 
-        switchElement.addEventListener("change", function () {
+            switchElement.addEventListener("change", function () {
 
-            var idUsuario = this.getAttribute("data-id");
-            var estatus = this.checked ? 1 : 0;
-            
-            fetch("http://localhost:8080/Api/Usuario/Update/Estatus", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: "idUsuario=" + idUsuario + "&estatus=" + estatus
-            })
-            .then(response => response.json())
-            .then(data => {
+                var idUsuario = this.getAttribute("data-id");
+                var estatus = this.checked ? 1 : 0;
 
-                if (data.correct) {
-                    Swal.fire({
-                       icon: 'success',
-                       title: 'Actualizado',
-                       text: 'El estatus se actualizo correctamente',
-                       timer: 1500,
-                       showConfirmButton: false
-                    });
-                } else {
-                    alert("Error: " + data.errorMessage);
-                }
+                fetch("http://localhost:8080/Api/Usuario/Update/Estatus", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: "idUsuario=" + idUsuario + "&estatus=" + estatus
+                })
+                .then(response => response.json())
+                .then(data => {
 
-            })
-            .catch(error => {
-                console.error("Error:", error);
+                    if (data.correct) {
+                        Swal.fire({
+                           icon: 'success',
+                           title: 'Actualizado',
+                           text: 'El estatus se actualizo correctamente',
+                           timer: 1500,
+                           showConfirmButton: false
+                        });
+                    } else {
+                        alert("Error: " + data.errorMessage);
+                    }
+
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+
             });
 
         });
 
     });
-
-});
-
-
 </script>
     </body>
 </html>

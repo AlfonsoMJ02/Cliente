@@ -19,14 +19,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -117,9 +115,7 @@ public class UsuarioController {
     }
 
     @PostMapping("Form")
-    public String ADD(@ModelAttribute Usuario usuario,
-            @RequestParam("imagenFile") MultipartFile imagenFile,
-            RedirectAttributes redirectAttributes) {
+    public String ADD(@ModelAttribute Usuario usuario, @RequestParam("imagenFile") MultipartFile imagenFile, RedirectAttributes redirectAttributes) {
 
         try {
 
@@ -189,5 +185,91 @@ public class UsuarioController {
         }
 
         return "redirect:/Usuario";
+    }
+
+    @GetMapping("CargaMasiva")
+    public String CargaMasiva() {
+        return "CargaMasiva";
+    }
+
+    @PostMapping("CargaMasiva")
+    public String Validacion(@RequestParam("archivo") MultipartFile archivo, Model model) {
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        String url = rutaBase + "/Api/Usuario/CargaMasiva";
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        try {
+
+            body.add("archivo", new ByteArrayResource(archivo.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return archivo.getOriginalFilename();
+                }
+            });
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity
+                = new HttpEntity<>(body, headers);
+
+        ResponseEntity<Result> responseEntity
+                = restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        requestEntity,
+                        new ParameterizedTypeReference<Result>() {
+                });
+
+        Result result = responseEntity.getBody();
+
+        if (result.correct) {
+
+            model.addAttribute("archivoValido", true);
+            model.addAttribute("keycarga", result.object);
+
+        } else {
+
+            model.addAttribute("archivoValido", false);
+            model.addAttribute("listaErrores", result.objects);
+        }
+
+        return "CargaMasiva";
+    }
+
+    @PostMapping("ProcesarCargaMasiva/{key}")
+    public String Procesar(@PathVariable String key, RedirectAttributes redirectAttributes) {
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        String url = rutaBase + "/Api/Usuario/ProcesarCargaMasiva/" + key;
+
+        ResponseEntity<Result> response
+                = restTemplate.exchange(
+                        url,
+                        HttpMethod.POST,
+                        HttpEntity.EMPTY,
+                        new ParameterizedTypeReference<Result>() {
+                });
+
+        Result result = response.getBody();
+
+        if (result.correct) {
+
+            redirectAttributes.addFlashAttribute("mensajeCorrecto", "Carga procesada correctamente");
+            return "redirect:/Usuario";
+
+        } else {
+
+            redirectAttributes.addFlashAttribute("mensajeError", result.errorMessage);
+            return "redirect:/Usuario/CargaMasiva";
+        }
     }
 }

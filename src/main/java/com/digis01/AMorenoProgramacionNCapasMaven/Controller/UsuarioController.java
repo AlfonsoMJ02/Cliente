@@ -197,8 +197,6 @@ public class UsuarioController {
 
         RestTemplate restTemplate = new RestTemplate();
 
-        String url = rutaBase + "/Api/Usuario/CargaMasiva";
-
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
         try {
@@ -222,15 +220,16 @@ public class UsuarioController {
 
         ResponseEntity<Result> responseEntity
                 = restTemplate.exchange(
-                        url,
+                        rutaBase + "/Api/Usuario/CargaMasiva",
                         HttpMethod.POST,
                         requestEntity,
                         new ParameterizedTypeReference<Result>() {
-                });
+                }
+                );
 
         Result result = responseEntity.getBody();
 
-        if (result.correct) {
+        if (result != null && result.correct) {
 
             model.addAttribute("archivoValido", true);
             model.addAttribute("keycarga", result.object);
@@ -249,25 +248,18 @@ public class UsuarioController {
 
         RestTemplate restTemplate = new RestTemplate();
 
-        String url = rutaBase + "/Api/Usuario/ProcesarCargaMasiva/" + key;
-
-        ResponseEntity<Result> response
-                = restTemplate.exchange(
-                        url,
+        ResponseEntity<Result> responseEntity = restTemplate.exchange(
+                        rutaBase + "/Api/Usuario/ProcesarCargaMasiva/" + key,
                         HttpMethod.POST,
                         HttpEntity.EMPTY,
-                        new ParameterizedTypeReference<Result>() {
-                });
+                        new ParameterizedTypeReference<Result>(){});
 
-        Result result = response.getBody();
+        Result result = responseEntity.getBody();
 
-        if (result.correct) {
-
+        if (result != null && result.correct) {
             redirectAttributes.addFlashAttribute("mensajeCorrecto", "Carga procesada correctamente");
             return "redirect:/Usuario";
-
         } else {
-
             redirectAttributes.addFlashAttribute("mensajeError", result.errorMessage);
             return "redirect:/Usuario/CargaMasiva";
         }

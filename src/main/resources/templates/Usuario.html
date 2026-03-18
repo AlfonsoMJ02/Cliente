@@ -466,11 +466,11 @@
                     <!-- GetAll Usuarios -->
                     <tbody id="tablaUsuarios">
                         <tr th:each="usuario : ${usuarios}" 
-    th:id="'fila-' + ${usuario.idUsuario}"
-    th:data-nombre="${usuario.nombre}"
-    th:data-apellido-paterno="${usuario.apellidoPaterno}"
-    th:data-apellido-materno="${usuario.apellidoMaterno}"
-    th:data-rol="${usuario.rol.idRol}">
+                            th:id="'fila-' + ${usuario.idUsuario}"
+                            th:data-nombre="${usuario.nombre}"
+                            th:data-apellido-paterno="${usuario.apellidoPaterno}"
+                            th:data-apellido-materno="${usuario.apellidoMaterno}"
+                            th:data-rol="${usuario.rol.idRol}">
                             <td colspan="2">
 
                                 <div class="card shadow-sm mb-3 p-3">
@@ -653,6 +653,14 @@
 
                 var button = event.relatedTarget;
                 var id = button.getAttribute('data-id');
+                
+                Swal.fire({
+                    title: 'Por favor, espere...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
                 fetch('http://localhost:8080/Api/Usuario/GetById/' + id)
                     .then(response => response.json())
@@ -684,7 +692,7 @@
                             if (usuario.Rol && usuario.Rol.IdRol) {
                                 document.getElementById("rol").value = String(usuario.Rol.IdRol);
                             }
-
+                            Swal.close();
                         } else {
                             alert("No se pudo cargar el usuario");
                         }
@@ -698,68 +706,68 @@
 
             //Actualiza la informacion del usuario
             document.querySelector("#EditarUsuario form")
-.addEventListener("submit", function(e) {
+            .addEventListener("submit", function(e) {
 
-    e.preventDefault();
+                e.preventDefault();
 
-    let usuario = {
-        IdUsuario: document.getElementById("idUsuario").value,
-        Nombre: document.getElementById("nombre").value,
-        ApellidoPaterno: document.getElementById("apellidoPaterno").value,
-        ApellidoMaterno: document.getElementById("apellidoMaterno").value,
-        Email: document.getElementById("email").value,
-        FechaNacimiento: document.getElementById("fechaNacimiento").value,
-        Password: document.getElementById("password").value,
-        Sexo: document.querySelector("input[name='sexo']:checked")?.value,
-        Telefono: document.getElementById("telefono").value,
-        Celular: document.getElementById("celular").value,
-        Curp: document.getElementById("curp").value,
-        UserName: document.getElementById("usuario").value,
-        Rol: {
-            IdRol: document.getElementById("rol").value
-        }
-    };
+                let usuario = {
+                    IdUsuario: document.getElementById("idUsuario").value,
+                    Nombre: document.getElementById("nombre").value,
+                    ApellidoPaterno: document.getElementById("apellidoPaterno").value,
+                    ApellidoMaterno: document.getElementById("apellidoMaterno").value,
+                    Email: document.getElementById("email").value,
+                    FechaNacimiento: document.getElementById("fechaNacimiento").value,
+                    Password: document.getElementById("password").value,
+                    Sexo: document.querySelector("input[name='sexo']:checked")?.value,
+                    Telefono: document.getElementById("telefono").value,
+                    Celular: document.getElementById("celular").value,
+                    Curp: document.getElementById("curp").value,
+                    UserName: document.getElementById("usuario").value,
+                    Rol: {
+                        IdRol: document.getElementById("rol").value
+                    }
+                };
 
-    fetch("http://localhost:8080/Api/Usuario/Update", {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(usuario)
-    })
-    .then(response => response.json())
-    .then(data => {
+                fetch("http://localhost:8080/Api/Usuario/Update", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(usuario)
+                })
+                .then(response => response.json())
+                .then(data => {
 
-        if (data.correct) {
+                    if (data.correct) {
 
-    const modalElement = document.getElementById('EditarUsuario');
-    const modal = bootstrap.Modal.getInstance(modalElement);
-    modal.hide();
+                const modalElement = document.getElementById('EditarUsuario');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                modal.hide();
 
-    Swal.fire({
-        icon: 'success',
-        title: 'Actualizado',
-        text: 'Usuario actualizado correctamente',
-        timer: 1500,
-        showConfirmButton: false
-    }).then(() => {
-        location.reload();
-    });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Actualizado',
+                    text: 'Usuario actualizado correctamente',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
+                });
 
-} else {
+            } else {
 
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.errorMessage
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.errorMessage
+                        });
+
+                    }
+
+                })
+                .catch(error => console.error(error));
+
             });
-
-        }
-
-    })
-    .catch(error => console.error(error));
-
-});
 
             //Eliminar usuario
             function confirmarEliminacion(button) {
@@ -830,6 +838,14 @@
 
                 var button = event.relatedTarget;
                 var idDireccion = button.getAttribute('data-id');
+                
+                Swal.fire({
+                    title: 'Por favor, espere...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
                 fetch('http://localhost:8080/Api/Usuario/GetById/Direccion/' + idDireccion)
                     .then(response => response.json())
@@ -900,6 +916,7 @@
                                                     });
 
                                                     $("#colonia").val(idColonia);
+                                                    Swal.close();
                                                 }
                                             });
                                         }
@@ -1410,6 +1427,8 @@ document.getElementById("formBusqueda").addEventListener("submit", function(e){
 
                 var idUsuario = this.getAttribute("data-id");
                 var estatus = this.checked ? 1 : 0;
+                
+                
 
                 fetch("http://localhost:8080/Api/Usuario/Update/Estatus", {
                     method: "PUT",
@@ -1429,6 +1448,7 @@ document.getElementById("formBusqueda").addEventListener("submit", function(e){
                            timer: 1500,
                            showConfirmButton: false
                         });
+                        
                     } else {
                         alert("Error: " + data.errorMessage);
                     }

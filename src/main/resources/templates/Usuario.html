@@ -1419,50 +1419,54 @@ document.getElementById("formBusqueda").addEventListener("submit", function(e){
 </script>
 <script>
     //Actualizacion de estatus
-    document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
 
-        document.querySelectorAll(".estatus-switch").forEach(function (switchElement) {
+    document.querySelectorAll(".estatus-switch").forEach(function (switchElement) {
 
-            switchElement.addEventListener("change", function () {
+        switchElement.addEventListener("change", function () {
 
-                var idUsuario = this.getAttribute("data-id");
-                var estatus = this.checked ? 1 : 0;
-                
-                
+            var idUsuario = this.getAttribute("data-id");
+            var estatus = this.checked ? 1 : 0;
 
-                fetch("http://localhost:8080/Api/Usuario/Update/Estatus", {
+            fetch("/token")
+            .then(res => res.text())
+            .then(token => {
+
+                return fetch("http://localhost:8080/Api/Usuario/Update/Estatus", {
                     method: "PUT",
                     headers: {
-                        "Content-Type": "application/x-www-form-urlencoded"
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "Authorization": "Bearer " + token
                     },
                     body: "idUsuario=" + idUsuario + "&estatus=" + estatus
-                })
-                .then(response => response.json())
-                .then(data => {
-
-                    if (data.correct) {
-                        Swal.fire({
-                           icon: 'success',
-                           title: 'Actualizado',
-                           text: 'El estatus se actualizo correctamente',
-                           timer: 1500,
-                           showConfirmButton: false
-                        });
-                        
-                    } else {
-                        alert("Error: " + data.errorMessage);
-                    }
-
-                })
-                .catch(error => {
-                    console.error("Error:", error);
                 });
 
+            })
+            .then(response => response.json())
+            .then(data => {
+
+                if (data.correct) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Actualizado',
+                        text: 'El estatus se actualizo correctamente',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    alert("Error: " + data.errorMessage);
+                }
+
+            })
+            .catch(error => {
+                console.error("Error:", error);
             });
 
         });
 
     });
+
+});
 </script>
     </body>
 </html>

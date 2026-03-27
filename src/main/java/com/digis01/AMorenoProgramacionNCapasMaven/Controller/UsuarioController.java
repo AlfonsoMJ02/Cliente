@@ -6,6 +6,7 @@ import com.digis01.AMorenoProgramacionNCapasMaven.ML.Pais;
 import com.digis01.AMorenoProgramacionNCapasMaven.ML.Result;
 import com.digis01.AMorenoProgramacionNCapasMaven.ML.Rol;
 import com.digis01.AMorenoProgramacionNCapasMaven.ML.Usuario;
+import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.core.ParameterizedTypeReference;
@@ -35,8 +36,19 @@ public class UsuarioController {
 
     private static String rutaBase = "http://localhost:8080";
 
-    @GetMapping
-    public String GetAll(Model model) {
+    @GetMapping()
+    public String GetAll(Model model, HttpSession session) {
+
+        String token = (String) session.getAttribute("token");
+
+        if (token == null) {
+            return "redirect:/Login";
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
 
         RestTemplate restTemplate = new RestTemplate();
 
@@ -44,9 +56,10 @@ public class UsuarioController {
                 = restTemplate.exchange(
                         rutaBase + "/Api/Usuario/GetAll",
                         HttpMethod.GET,
-                        HttpEntity.EMPTY,
+                        entity,
                         new ParameterizedTypeReference<Result<Usuario>>() {
-                });
+                }
+                );
 
         Result<Usuario> result = responseEntity.getBody();
 
@@ -55,7 +68,7 @@ public class UsuarioController {
         ResponseEntity<Result<Rol>> responseEntityRol
                 = restTemplate.exchange(rutaBase + "/Api/Usuario/Rol",
                         HttpMethod.GET,
-                        HttpEntity.EMPTY,
+                        entity,
                         new ParameterizedTypeReference<Result<Rol>>() {
                 });
 
@@ -69,7 +82,7 @@ public class UsuarioController {
                 = restTemplate.exchange(
                         rutaBase + "/Api/Usuario/Pais",
                         HttpMethod.GET,
-                        HttpEntity.EMPTY,
+                        entity,
                         new ParameterizedTypeReference<Result<Pais>>() {
                 });
 
@@ -81,17 +94,29 @@ public class UsuarioController {
 
         return "Usuario";
     }
+    
+    @GetMapping("Perfil")
+    public String Perfil(){
+        return "Perfil";
+    }
 
     @GetMapping("Form")
-    public String Form(Model model) {
+    public String Form(Model model, HttpSession session) {
         Usuario usuario = new Usuario();
-
+        String token = (String) session.getAttribute("token");
         model.addAttribute("usuario", usuario);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
         RestTemplate restTemplate = new RestTemplate();
+ 
         ResponseEntity<Result<Pais>> responseEntityPais
                 = restTemplate.exchange(rutaBase + "/Api/Usuario/Pais",
                         HttpMethod.GET,
-                        HttpEntity.EMPTY,
+                        entity,
                         new ParameterizedTypeReference<Result<Pais>>() {
                 });
         Result<Pais> resultPais = responseEntityPais.getBody();
@@ -103,7 +128,7 @@ public class UsuarioController {
         ResponseEntity<Result<Rol>> responseEntityRol
                 = restTemplate.exchange(rutaBase + "/Api/Usuario/Rol",
                         HttpMethod.GET,
-                        HttpEntity.EMPTY,
+                        entity,
                         new ParameterizedTypeReference<Result<Rol>>() {
                 });
 
@@ -249,10 +274,11 @@ public class UsuarioController {
         RestTemplate restTemplate = new RestTemplate();
 
         ResponseEntity<Result> responseEntity = restTemplate.exchange(
-                        rutaBase + "/Api/Usuario/ProcesarCargaMasiva/" + key,
-                        HttpMethod.POST,
-                        HttpEntity.EMPTY,
-                        new ParameterizedTypeReference<Result>(){});
+                rutaBase + "/Api/Usuario/ProcesarCargaMasiva/" + key,
+                HttpMethod.POST,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<Result>() {
+        });
 
         Result result = responseEntity.getBody();
 

@@ -6,6 +6,8 @@ import com.digis01.AMorenoProgramacionNCapasMaven.ML.Pais;
 import com.digis01.AMorenoProgramacionNCapasMaven.ML.Result;
 import com.digis01.AMorenoProgramacionNCapasMaven.ML.Rol;
 import com.digis01.AMorenoProgramacionNCapasMaven.ML.Usuario;
+import com.digis01.AMorenoProgramacionNCapasMaven.Util.JwtUtil;
+import static com.digis01.AMorenoProgramacionNCapasMaven.Util.JwtUtil.getRolFromToken;
 import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -37,7 +41,7 @@ public class UsuarioController {
     private static String rutaBase = "http://localhost:8080";
 
     @GetMapping()
-    public String GetAll(Model model, HttpSession session) {
+    public String GetAll(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
 
         String token = (String) session.getAttribute("token");
 
@@ -45,6 +49,16 @@ public class UsuarioController {
             return "redirect:/Login";
         }
 
+        String rol = getRolFromToken(token);
+
+        if (!"Administrador".equals(rol)) {
+
+            redirectAttributes.addFlashAttribute("errorPermiso",
+                    "No tienes permisos para acceder a la vista de usuarios");
+
+            return "redirect:/Usuario/Perfil";
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
 
@@ -52,52 +66,98 @@ public class UsuarioController {
 
         RestTemplate restTemplate = new RestTemplate();
 
-        ResponseEntity<Result<Usuario>> responseEntity
+        try {
+
+            ResponseEntity<Result<Usuario>> responseEntity
+                    = restTemplate.exchange(
+                            rutaBase + "/Api/Usuario/GetAll",
+                            HttpMethod.GET,
+                            entity,
+                            new ParameterizedTypeReference<Result<Usuario>>() {
+                    });
+
+            Result<Usuario> result = responseEntity.getBody();
+
+            model.addAttribute("usuarios", result.objects);
+
+            ResponseEntity<Result<Rol>> responseEntityRol
+                    = restTemplate.exchange(
+                            rutaBase + "/Api/Usuario/Rol",
+                            HttpMethod.GET,
+                            entity,
+                            new ParameterizedTypeReference<Result<Rol>>() {
+                    });
+
+            Result<Rol> resultRol = responseEntityRol.getBody();
+
+            if (resultRol != null && resultRol.objects != null) {
+                model.addAttribute("roles", resultRol.objects);
+            }
+
+            ResponseEntity<Result<Pais>> responseEntityPais
+                    = restTemplate.exchange(
+                            rutaBase + "/Api/Usuario/Pais",
+                            HttpMethod.GET,
+                            entity,
+                            new ParameterizedTypeReference<Result<Pais>>() {
+                    });
+
+            Result<Pais> resultPais = responseEntityPais.getBody();
+
+            if (resultPais != null && resultPais.objects != null) {
+                model.addAttribute("paises", resultPais.objects);
+            }
+
+        } catch (HttpClientErrorException.Forbidden ex) {
+
+            model.addAttribute("errorPermiso", true);
+            return "redirect:/Usuario/Perfil";
+
+        } catch (Exception ex) {
+
+            model.addAttribute("errorGeneral", true);
+            return "redirect:/Usuario/Perfil";
+        }
+
+        return "Usuario";
+    }
+
+    @GetMapping("/Perfil")
+    public String perfil(HttpSession session, Model model) {
+
+        String token = (String) session.getAttribute("token");
+
+        if (token == null) {
+            return "redirect:/Login";
+        }
+
+        int idUsuario = JwtUtil.getIdFromToken(token);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<Result<Usuario>> response
                 = restTemplate.exchange(
-                        rutaBase + "/Api/Usuario/GetAll",
+                        rutaBase + "/Api/Usuario/GetByIdUser/" + idUsuario,
                         HttpMethod.GET,
                         entity,
                         new ParameterizedTypeReference<Result<Usuario>>() {
                 }
                 );
 
-        Result<Usuario> result = responseEntity.getBody();
+        model.addAttribute("usuario", response.getBody().object);
 
-        model.addAttribute("usuarios", result.objects);
-
-        ResponseEntity<Result<Rol>> responseEntityRol
-                = restTemplate.exchange(rutaBase + "/Api/Usuario/Rol",
-                        HttpMethod.GET,
-                        entity,
-                        new ParameterizedTypeReference<Result<Rol>>() {
-                });
-
-        Result<Rol> resultRol = responseEntityRol.getBody();
-
-        if (resultRol != null && resultRol.objects != null) {
-            model.addAttribute("roles", resultRol.objects);
-        }
-
-        ResponseEntity<Result<Pais>> responseEntityPais
-                = restTemplate.exchange(
-                        rutaBase + "/Api/Usuario/Pais",
-                        HttpMethod.GET,
-                        entity,
-                        new ParameterizedTypeReference<Result<Pais>>() {
-                });
-
-        Result<Pais> resultPais = responseEntityPais.getBody();
-
-        if (resultPais != null && resultPais.objects != null) {
-            model.addAttribute("paises", resultPais.objects);
-        }
-
-        return "Usuario";
-    }
-    
-    @GetMapping("Perfil")
-    public String Perfil(){
         return "Perfil";
+    }
+
+    @GetMapping("/token")
+    @ResponseBody
+    public String getToken(HttpSession session) {
+        return (String) session.getAttribute("token");
     }
 
     @GetMapping("Form")
@@ -105,14 +165,14 @@ public class UsuarioController {
         Usuario usuario = new Usuario();
         String token = (String) session.getAttribute("token");
         model.addAttribute("usuario", usuario);
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + token);
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         RestTemplate restTemplate = new RestTemplate();
- 
+
         ResponseEntity<Result<Pais>> responseEntityPais
                 = restTemplate.exchange(rutaBase + "/Api/Usuario/Pais",
                         HttpMethod.GET,

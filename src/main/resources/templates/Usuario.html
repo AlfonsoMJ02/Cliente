@@ -1428,7 +1428,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var idUsuario = this.getAttribute("data-id");
             var estatus = this.checked ? 1 : 0;
 
-            fetch("/token")
+            fetch("/Usuario/token")
             .then(res => res.text())
             .then(token => {
 
@@ -1468,5 +1468,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
+
     </body>
 </html>

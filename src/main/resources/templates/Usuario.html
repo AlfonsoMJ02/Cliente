@@ -1126,83 +1126,97 @@ $(document).ready(function () {
 
             function actualizarImagen(idUsuario, input) {
 
-            const file = input.files[0];
-            if (!file) return;
+    const file = input.files[0];
+    if (!file) return;
 
-            if (!file.type.startsWith("image/")) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Formato no válido',
-                    text: 'Solo se permiten imágenes'
+    if (!file.type.startsWith("image/")) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Formato no válido',
+            text: 'Solo se permiten imágenes'
+        });
+        input.value = "";
+        return;
+    }
+
+    Swal.fire({
+        title: '¿Actualizar imagen?',
+        text: 'La imagen del usuario será reemplazada.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#dc3545',
+        confirmButtonText: 'Sí, actualizar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            const formData = new FormData();
+            formData.append("idUsuario", idUsuario);
+            formData.append("imagenFile", file);
+
+            fetch("/Usuario/token")
+            .then(res => res.text())
+            .then(token => {
+
+                return fetch("http://localhost:8080/Api/Usuario/Update/Imagen", {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": "Bearer " + token 
+                    },
+                    body: formData
                 });
-                input.value = "";
-                return;
-            }
 
-            Swal.fire({
-                title: '¿Actualizar imagen?',
-                text: 'La imagen del usuario será reemplazada.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#198754',
-                cancelButtonColor: '#dc3545',
-                confirmButtonText: 'Sí, actualizar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error HTTP " + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
 
-                if (result.isConfirmed) {
+                if (data.correct) {
 
-                    const formData = new FormData();
-                    formData.append("idUsuario", idUsuario);
-                    formData.append("imagenFile", file);
+                    const reader = new FileReader();
 
-                    fetch('http://localhost:8080/Api/Usuario/Update/Imagen', {
-                        method: 'PUT',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
+                    reader.onload = function(e) {
+                        document.getElementById("previewImage-" + idUsuario).src = e.target.result;
+                    };
 
-                        if (data.correct) {
+                    reader.readAsDataURL(file);
 
-                            const reader = new FileReader();
-
-                            reader.onload = function(e) {
-                                document.getElementById("previewImage-" + idUsuario).src = e.target.result;
-                            };
-
-                            reader.readAsDataURL(file);
-
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Actualizada',
-                                text: 'La imagen fue actualizada correctamente',
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: data.errorMessage
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error inesperado',
-                            text: 'Ocurrió un problema al actualizar'
-                        });
-                        console.error(error);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Actualizada',
+                        text: 'La imagen fue actualizada correctamente',
+                        timer: 1500,
+                        showConfirmButton: false
                     });
 
                 } else {
-                    input.value = "";
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.errorMessage
+                    });
                 }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error inesperado',
+                    text: 'Ocurrió un problema al actualizar'
+                });
+                console.error(error);
             });
+
+        } else {
+            input.value = "";
         }
+    });
+    }
 
 
 
